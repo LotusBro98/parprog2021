@@ -34,44 +34,33 @@ int main(int argc, char * argv[]) {
     /* Используем принцип динамического программирования - будем вычеркивать все кратные уже просмотренных простых чисел и сохранять результат */
     /* если число a > sqrt(N) делитель N, то N = b*a, b < sqrt(N). То есть если у N нет делителей <= sqrt(N), то и > sqrt(N) тоже нет */
 
-    /* Создаем маску, в которой будем вычеркивать составные числа, заполняем нулями */
-    bool * mask = new bool[N + 1];
+    /* Создаем маску, в которой будем вычеркивать составные числа, заполняем 1 */
+    uint8_t * mask = new uint8_t [N + 1];
     #pragma omp parallel for default(none) shared(mask, N)
     for (uint64_t i = 1; i <= N; i++)
-        mask[i] = false;
+        mask[i] = 1;
 
-    /* Так как оценка кол-ва простых чисел от 1 до N порядка log(N) то можно позволить себе создать структуру для их хранения */
-    std::vector<uint64_t> numbers;
+    uint64_t N_prime = N;
 
     /* Перебираем числа i от 2 до sqrt(N) и вычеркиваем все кратные i */
     for (uint64_t i = 2; i*i <= N; i++) {
         /* Если оно составное, не ищем кратные ему, так как они кратны простым числам, которые меньше i, и уже отмечены ранее */
-        if (mask[i])
+        if (!mask[i])
             continue;
 
         /* Отмечаем все кратные этому простому числу от i^2 до N */
         /* Можно начинать с i^2, потому что если число a < i^2 кратно i, то a = i * b, b < i, поэтому все числа кратные b уже вычеркнуты, поэтому и a уже вычеркнуто */
-        #pragma omp parallel for default(none) shared(mask, N, i)
+        #pragma omp parallel for default(none) shared(mask, N, i) reduction(-:N_prime)
         for (uint64_t j = i*i; j <= N; j += i) {
-            mask[j] = true;
-        }
-    }
-
-    /* Собираем оставшиеся числа в более компактный вид */
-    #pragma omp parallel for ordered default(none) shared(mask, N, numbers)
-    for (uint64_t i = 1; i <= N; i++) {
-        if (!mask[i]) {
-            #pragma omp ordered
-                numbers.push_back(i);
+            N_prime -= mask[j];
+            mask[j] = 0;
         }
     }
 
     delete[] mask;
 
     /* Печатаем результат */
-    for (uint64_t i : numbers)
-        printf("%llu ", i);
-    printf("\n");
+    printf("%lld prime numbers from 1 to %lld\n", N_prime, N);
 
     return 0;
 }
