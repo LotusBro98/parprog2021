@@ -45,14 +45,36 @@ int get_array(int argc, char * argv[], int32_t** array, int * N) {
     return 0;
 }
 
+int32_t * array;
+
+void sort_subset(int32_t * start, int32_t * end)
+{
+    if (end - start <= 1)
+        return;
+
+    int32_t * ref = end;
+
+
+    #pragma omp task default(none) firstprivate(start, end, ref)
+        sort_subset(start, ref);
+    #pragma omp task default(none) firstprivate(start, end, ref)
+        sort_subset(ref, end);
+}
+
 int main(int argc, char * argv[]) {
-    int32_t * array;
+//    int32_t * array;
     int N;
 
     if (get_array(argc, argv, &array, &N))
         return -1;
 
-
+    #pragma omp parallel default(none) shared(array, N)
+    {
+        #pragma omp single nowait
+        {
+            sort_subset(array, array + N);
+        }
+    }
 
     return 0;
 }
