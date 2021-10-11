@@ -7,6 +7,8 @@
 #include <vector>
 #include <cmath>
 
+/* Доп. условия: Не используя простой перебор = используя оптимизированные способы поиска (с обоснованием) */
+
 int parse_args(int argc, char * argv[], uint64_t * N) {
     if (argc != 2) {
         printf("Wrong number of arguments! Expected 1 number\n");
