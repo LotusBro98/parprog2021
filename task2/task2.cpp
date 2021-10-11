@@ -4,7 +4,13 @@
 #include <cstdlib>
 #include <cstring>
 
+/* Доп. условия:
+ * N задается аргументом запуска
+ * Использовать условия reduction, schedule
+ */
+
 int main(int argc, char * argv[]) {
+    /* Парсим аргумент N */
     if (argc != 2) {
         printf("Wrong number of arguments! Expected 1 number\n");
         return -1;
@@ -17,6 +23,7 @@ int main(int argc, char * argv[]) {
         return -1;
     }
 
+    /* Используем omp parallel for вместе с reduction для суммирования */
     uint64_t sum = 0;
 
     #pragma omp parallel for default(none) shared(N) reduction(+:sum) schedule(static)
@@ -24,6 +31,7 @@ int main(int argc, char * argv[]) {
         sum += i;
     }
 
+    /* Выводим результат */
     printf("Sum from 1 to %llu is %llu\n", N, sum);
 
     return 0;
